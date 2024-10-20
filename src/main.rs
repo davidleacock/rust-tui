@@ -29,15 +29,14 @@ impl TodoApp {
     }
 }
 
-fn draw_ui<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &TodoApp)
-                                         -> Result<(), Box<dyn std::error::Error>> {
+fn draw_ui<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &TodoApp) -> Result<(), Box<dyn std::error::Error>> {
     terminal.draw(|frame| {
         let size = frame.area();
 
         let items: Vec<ListItem> = app.items.iter().enumerate().map(|(i, item)| {
             let status = if item.checked { "✅" } else { "⭕️" };
-            let content =  format!("{} - {}", status, item.description);
-            
+            let content = format!("{} - {}", status, item.description);
+
             if i == app.selected {
                 ListItem::new(content)
                     .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
@@ -50,7 +49,6 @@ fn draw_ui<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &TodoA
 
         frame.render_widget(list, size);
     })?;
-
 
     Ok(())
 }
@@ -81,12 +79,14 @@ fn handle_input(app: &mut TodoApp) -> Result<bool, Box<dyn std::error::Error>> {
                     }
                 }
 
+                // Blank enter to select
                 KeyCode::Char(' ') => {
                     let item = &mut app.items[app.selected];
                     item.checked = !item.checked;
                 }
 
-                KeyCode::Char('q') => return Ok(true), // Quit app
+                // Quit app
+                KeyCode::Char('q') => return Ok(true), 
                 _ => {}
             }
         }
