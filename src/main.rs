@@ -1,136 +1,115 @@
-mod ui;
-mod app;
+use crossterm::event::{self, Event, KeyCode};
+use crossterm::{execute, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen}};
+use ratatui::backend::CrosstermBackend;
+use ratatui::widgets::{Block, Borders, List, ListItem};
+use ratatui::Terminal;
+use std::io::stdout;
 
-use std::error::Error;
-use std::io;
+struct TodoItem {
+    description: String,
+    checked: bool,
+}
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, style::Stylize, symbols::border, text::{Line, Text}, widgets::{
-    block::{Position, Title},
-    Block, Paragraph, Widget,
-}, DefaultTerminal, Frame, Terminal};
-use ratatui::backend::{Backend, CrosstermBackend};
-use ratatui::crossterm::event::EnableMouseCapture;
-use ratatui::crossterm::execute;
-use ratatui::crossterm::terminal::{enable_raw_mode, EnterAlternateScreen};
+struct TodoApp {
+    items: Vec<TodoItem>,
+    selected: usize,
+}
 
-use ratatui::crossterm::event::DisableMouseCapture;
-use ratatui::crossterm::terminal::{disable_raw_mode, LeaveAlternateScreen};
-
-use crate::app::{App, CurrentScreen, CurrentlyEditing};
-
-fn main() -> Result<(), Box<dyn Error>> {
-    // Setup terminal
-    enable_raw_mode()?;
-
-    let mut stderr = io::stderr();
-    execute!(stderr, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stderr);
-    let mut terminal = Terminal::new(backend)?;
-
-    let mut app = App::new();
-    let res = run_app(&mut terminal, &mut app);
-
-    // restore terminal
-    disable_raw_mode();
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
-
-    if let Ok(do_print) = res {
-        if do_print {
-            app.print_json()?;
+impl TodoApp {
+    fn new() -> Self {
+        TodoApp {
+            items: vec![
+                TodoItem { description: "Task 1".to_string(), checked: false },
+                TodoItem { description: "Task 2".to_string(), checked: false },
+                TodoItem { description: "Task 3".to_string(), checked: true },
+            ],
+            selected: 0,
         }
-    } else if let Err(err) = res {
-        println!("{err:?}");
     }
+}
+
+fn draw_ui<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &TodoApp)
+                                         -> Result<(), Box<dyn std::error::Error>> {
+    terminal.draw(|frame| {
+        let size = frame.size();
+
+        let items: Vec<ListItem> = app.items.iter().map(|item| {
+            let status = if item.checked { "✅" } else { "⭕️" };
+            ListItem::new(format!("{} - {}", status, item.description))
+        }).collect();
+
+        let list = List::new(items).block(Block::default().title("ToDo List").borders(Borders::ALL));
+
+        frame.render_widget(list, size);
+    })?;
+
+
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<bool> {
-    loop {
-        terminal.draw(|frame| ui(f, app)?);
-
+fn handle_input(app: &mut TodoApp) -> Result<bool, Box<dyn std::error::Error>> {
+    if event::poll(std::time::Duration::from_millis(10))? {
         if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Release {
-                continue;
-            }
-
-            match app.current_screen {
-                CurrentScreen::Main => match key.code {
-                    KeyCode::Char('e') => {
-                        app.current_screen = CurrentScreen::Editing;
-                        app.currently_editing = Some(CurrentlyEditing::Key);
-                    }
-                    KeyCode::Char('q') => {
-                        app.current_screen = CurrentScreen::Exiting;
-                    }
-                    _ => {}
-                },
-                CurrentScreen::Exiting => match key.code {
-                    KeyCode::Char('y') => {
-                        return Ok(true);
-                    }
-                    KeyCode::Char('n') | KeyCode::Char('q') =>  {
-                        return Ok(false);
-                    }
-                    _ => {}
-                },
-                CurrentScreen::Editing if key.kind == KeyEventKind::Press => {
-                    match key.code {
-                        KeyCode::Enter => {
-                            if let Some(editing) = &app.currently_editing {
-                                match editing {
-                                    CurrentlyEditing::Key => {
-                                        app.currently_editing = Some(CurrentlyEditing::Value);
-                                    }
-                                    CurrentlyEditing::Value => {
-                                        app.save_key_value();
-                                        app.current_screen = CurrentScreen::Main;
-                                    }
-                                }
-                            }
-                        }
-                        KeyCode::Backspace => {
-                            if let Some(editing) = &app.currently_editing {
-                                match editing {
-                                    CurrentlyEditing::Key => {
-                                        app.key_input.pop();
-                                    }
-                                    CurrentlyEditing::Value => {
-                                        app.value_input.pop();
-                                    }
-                                }
-                            }
-                        }
-                        KeyCode::Esc => {
-                            app.current_screen = CurrentScreen::Main;
-                            app.currently_editing = None;
-                        }
-                        KeyCode::Tab => {
-                            app.toggle_editing();
-                        }
-                        KeyCode::Char(value) => {
-                            if let Some(editing) = &app.currently_editing {
-                                match editing {
-                                    CurrentlyEditing::Key => {
-                                        app.key_input.push(value);
-                                    }
-                                    CurrentlyEditing::Value => {
-                                        app.value_input.push(value);
-                                    }
-                                }
-                            }
-                        }
-                        _ => {}
+            match key.code {
+                KeyCode::Up => {
+                    if app.selected > 0 {
+                        app.selected -= 1;
                     }
                 }
+                KeyCode::Down => {
+                    if app.selected < app.items.len() - 1 {
+                        app.selected += 1;
+                    }
+                }
+
+                KeyCode::Left => {
+                    if app.selected > 0 {
+                        app.selected -= 1;
+                    }
+                }
+                KeyCode::Right => {
+                    if app.selected < app.items.len() - 1 {
+                        app.selected += 1;
+                    }
+                }
+
+                KeyCode::Char(' ') => {
+                    let item = &mut app.items[app.selected];
+                    item.checked = !item.checked;
+                }
+
+                KeyCode::Char('q') => return Ok(true), // Quit app
                 _ => {}
             }
         }
     }
+
+    Ok(false)
 }
 
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    // Handle user input manually
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+
+    let mut terminal = Terminal::new(backend)?;
+    let mut app = TodoApp::new();
+
+    loop {
+        draw_ui(&mut terminal, &app)?;
+        if handle_input(&mut app)? {
+            break;
+        }
+    }
+
+    // Restore terminal state
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    terminal.show_cursor()?;
+
+    Ok(())
+}
