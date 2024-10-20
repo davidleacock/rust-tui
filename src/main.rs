@@ -4,6 +4,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::widgets::{Block, Borders, List, ListItem};
 use ratatui::Terminal;
 use std::io::stdout;
+use ratatui::style::{Style, Modifier, Color};
 
 struct TodoItem {
     description: String,
@@ -31,11 +32,18 @@ impl TodoApp {
 fn draw_ui<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &TodoApp)
                                          -> Result<(), Box<dyn std::error::Error>> {
     terminal.draw(|frame| {
-        let size = frame.size();
+        let size = frame.area();
 
-        let items: Vec<ListItem> = app.items.iter().map(|item| {
+        let items: Vec<ListItem> = app.items.iter().enumerate().map(|(i, item)| {
             let status = if item.checked { "✅" } else { "⭕️" };
-            ListItem::new(format!("{} - {}", status, item.description))
+            let content =  format!("{} - {}", status, item.description);
+            
+            if i == app.selected {
+                ListItem::new(content)
+                    .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+            } else {
+                ListItem::new(content)
+            }
         }).collect();
 
         let list = List::new(items).block(Block::default().title("ToDo List").borders(Borders::ALL));
