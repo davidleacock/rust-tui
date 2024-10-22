@@ -1,9 +1,12 @@
-- [ ] Todo notes app with checkbox and highlights
-- [ ] Add ability to create/edit lines
+- [X] Todo notes app with checkbox and highlights
+- [X] Add ability to create/edit lines
 - [ ] Add styling
 - [ ] Widgitize the to-do section  so I can add new widgets
 - [ ] Pomodor timer widget
 - [ ] Themes would be cool
+- [X] Organize project
+- [ ] Add the debug logging on crashes
+- [ ] Toolbar giving hits and key commands
 
 
 
