@@ -7,10 +7,11 @@
 - [X] Organize project
 - [ ] Add the debug logging on crashes
 - [ ] Toolbar giving hits and key commands
+- [ ] How does logging work?
 
 
 
 <h2>Developer Notes App</h2>
 Project to expand Rust knowledge and work with TUI library.  App will feature a </n>
-pomodoro timer, todo app, and a basic note taking app for pasting text and taking notes on current </n>
+pomodoro timer, todo app, and a basic note-taking app for pasting text and taking notes on current </n>
 tasks.  Will add more features as I think about it

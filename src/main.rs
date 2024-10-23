@@ -20,11 +20,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
 
     let mut terminal = Terminal::new(backend)?;
-    let mut app = TodoApp::new();
+    let mut app = App::new();
 
     loop {
         draw_ui(&mut terminal, &app)?;
-        if handle_input(&mut app)? {
+        if handle_inputs(&mut app)? {
             break;
         }
     }

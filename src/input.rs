@@ -1,10 +1,59 @@
 use crossterm::event;
-use crossterm::event::{Event, KeyCode};
-use crate::app::{TodoApp, TodoItem};
+use crossterm::event::{Event, KeyCode, KeyEvent};
+use crate::app::{App, TodoItem, Window};
 
-pub fn handle_input(app: &mut TodoApp) -> Result<bool, Box<dyn std::error::Error>> {
-    if event::poll(std::time::Duration::from_millis(10))? {
+
+pub fn handle_inputs(app: &mut App) -> Result<bool, Box<dyn std::error::Error>> {
+    if event::poll(std::time::Duration::from_millis(10))? { 
         if let Event::Key(key) = event::read()? {
+            match key.code {
+                KeyCode::Tab => {
+                    match app.active_window {
+                        Window::TodoList => app.active_window = Window::Notepad,
+                        Window::Notepad => app.active_window = Window::TodoList
+                    }
+                }
+                
+                _ => {}
+            }
+            
+            let result = match app.active_window {
+                Window::TodoList => handle_todo_input(app, key)?,
+                Window::Notepad => handle_notepad_input(app, key)?
+            };
+            
+            return Ok(result)
+        }
+    }
+    Ok(false)
+}
+
+fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
+    if app.notepad_editing {
+        match key.code {
+            KeyCode::Char(c) => {
+                app.notepad_content.push(c);
+            }
+            KeyCode::Backspace => {
+                app.notepad_content.pop();
+            }
+            KeyCode::Enter => {
+                app.notepad_content.push('\n');
+            }
+            
+            _ => {}
+        }
+    } else {
+        if let KeyCode::Char('e') = key.code { 
+            app.notepad_editing = !app.notepad_editing;
+        }
+    }
+    
+    Ok(false)
+}
+
+pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
+    if event::poll(std::time::Duration::from_millis(10))? {
             if app.editing {
                 match key.code {
                     KeyCode::Char(c) => {
@@ -90,7 +139,6 @@ pub fn handle_input(app: &mut TodoApp) -> Result<bool, Box<dyn std::error::Error
                     _ => {}
                 }
             }
-        }
     }
 
     Ok(false)
