@@ -2,7 +2,10 @@ mod app;
 mod input;
 mod ui;
 
-use crossterm::{execute, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen}};
+use crossterm::{
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io::stdout;
@@ -12,7 +15,6 @@ use crate::input::*;
 use crate::ui::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     // Handle user input manually
     enable_raw_mode()?;
     let mut stdout = stdout();
