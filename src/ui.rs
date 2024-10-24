@@ -4,51 +4,49 @@ use ratatui::prelude::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, List, ListItem, Paragraph};
 use ratatui::Terminal;
 
-
-pub fn draw_ui<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &App) -> Result<(), Box<dyn std::error::Error>> {
+pub fn draw_ui<B: ratatui::backend::Backend>(
+    terminal: &mut Terminal<B>,
+    app: &App,
+) -> Result<(), Box<dyn std::error::Error>> {
     terminal.draw(|frame| {
         let size = frame.area();
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(
-                [
-                    Constraint::Percentage(30),
-                    Constraint::Percentage(70)
-                ]
-                    .as_ref(),
-            )
+            .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
             .split(size);
 
-        let todo_items: Vec<ListItem> =
-            app.items.iter().enumerate().map(|(i, item)| {
+        let todo_items: Vec<ListItem> = app
+            .items
+            .iter()
+            .enumerate()
+            .map(|(i, item)| {
                 let status = if item.checked { "✅" } else { "⭕️" };
 
                 if i == app.selected && app.editing {
-                    ListItem::new(format!("{} - {}", status, app.current_input.clone()))
-                        .style(
-                            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-                        )
+                    ListItem::new(format!("{} - {}", status, app.current_input.clone())).style(
+                        Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::BOLD),
+                    )
                 } else if i == app.selected {
-                    ListItem::new(format!("{} - {}", status, item.description))
-                        .style(
-                            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-                        )
+                    ListItem::new(format!("{} - {}", status, item.description)).style(
+                        Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::BOLD),
+                    )
                 } else {
                     ListItem::new(format!("{} - {}", status, item.description))
                 }
-            }).collect();
-
+            })
+            .collect();
 
         let todo_list = List::new(todo_items)
-            .block(
-                styled_block("Todo", app.active_window == Window::TodoList)
-            );
+            .block(styled_block("Todo", app.active_window == Window::TodoList));
 
-        let notepad = Paragraph::new(app.notepad_content.clone())
-            .block(
-                styled_block("Notepad", app.active_window == Window::Notepad)
-            );
-
+        let notepad = Paragraph::new(app.notepad_content.clone()).block(styled_block(
+            "Notepad",
+            app.active_window == Window::Notepad,
+        ));
 
         frame.render_widget(todo_list, chunks[0]);
         frame.render_widget(notepad, chunks[1]);
