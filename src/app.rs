@@ -6,7 +6,7 @@ pub struct TodoItem {
 #[derive(PartialEq)]
 pub enum Window {
     TodoList,
-    Notepad
+    Notepad,
 }
 
 pub struct App {
@@ -16,7 +16,7 @@ pub struct App {
     pub current_input: String,
     pub active_window: Window,
     pub notepad_content: String,
-    pub notepad_editing: bool
+    pub notepad_editing: bool,
 }
 
 impl App {
