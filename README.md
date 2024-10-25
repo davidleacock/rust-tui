@@ -7,7 +7,7 @@
 - [X] Organize project
 - [ ] Add the debug logging on crashes
 - [ ] Toolbar giving hits and key commands
-- [ ] How does logging work?
+- [X] How does logging work?
 
 
 

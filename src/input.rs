@@ -1,6 +1,8 @@
 use crate::app::{App, TodoItem, Window};
 use crossterm::event;
 use crossterm::event::{Event, KeyCode, KeyEvent};
+use cli_log::*; // also import logging macros
+
 
 pub fn handle_inputs(app: &mut App) -> Result<bool, Box<dyn std::error::Error>> {
     if event::poll(std::time::Duration::from_millis(10))? {
@@ -19,6 +21,8 @@ pub fn handle_inputs(app: &mut App) -> Result<bool, Box<dyn std::error::Error>> 
                 Window::Notepad => handle_notepad_input(app, key)?,
             };
 
+            info!("Testing... {:#?}", app);
+
             return Ok(result);
         }
     }
@@ -26,6 +30,7 @@ pub fn handle_inputs(app: &mut App) -> Result<bool, Box<dyn std::error::Error>> 
 }
 
 fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
+    info!("Handle notepad input");
     if app.notepad_editing {
         match key.code {
             KeyCode::Char(c) => {
@@ -50,8 +55,10 @@ fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn st
 }
 
 pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
+    info!("Handle todo input");
+
     if event::poll(std::time::Duration::from_millis(10))? {
-        if app.editing {
+        if app.todo_editing {
             match key.code {
                 KeyCode::Char(c) => {
                     app.current_input.push(c);
@@ -61,7 +68,7 @@ pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn s
                 }
                 KeyCode::Enter => {
                     app.items[app.selected].description = app.current_input.clone();
-                    app.editing = false;
+                    app.todo_editing = false;
                 }
                 _ => {}
             }
@@ -97,7 +104,8 @@ pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn s
 
                 // Enter Edit mode
                 KeyCode::Char('e') => {
-                    app.editing = true;
+                    info!("entering edit mode");
+                    app.todo_editing = true;
                     app.current_input = app.items[app.selected].description.clone();
                 }
 
@@ -114,7 +122,7 @@ pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn s
                         app.items.insert(app.selected + 1, new_item);
                         app.selected += 1;
                     }
-                    app.editing = true;
+                    app.todo_editing = true;
                     app.current_input = String::new();
                 }
 

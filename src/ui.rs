@@ -22,7 +22,7 @@ pub fn draw_ui<B: ratatui::backend::Backend>(
             .map(|(i, item)| {
                 let status = if item.checked { "✅" } else { "⭕️" };
 
-                if i == app.selected && app.editing {
+                if i == app.selected && app.todo_editing {
                     ListItem::new(format!("{} - {}", status, app.current_input.clone())).style(
                         Style::default()
                             .fg(Color::Yellow)
