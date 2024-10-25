@@ -1,4 +1,5 @@
-use crate::app::{App, Window};
+use crate::app::{App, TodoItem, Window};
+use chrono::Local;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, List, ListItem, Paragraph};
@@ -10,10 +11,16 @@ pub fn draw_ui<B: ratatui::backend::Backend>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     terminal.draw(|frame| {
         let size = frame.area();
-        let chunks = Layout::default()
+
+        let total_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
+            .split(size);
+
+        let content_chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
-            .split(size);
+            .split(total_chunks[0]);
 
         let todo_items: Vec<ListItem> = app
             .items
@@ -48,8 +55,11 @@ pub fn draw_ui<B: ratatui::backend::Backend>(
             app.active_window == Window::Notepad,
         ));
 
-        frame.render_widget(todo_list, chunks[0]);
-        frame.render_widget(notepad, chunks[1]);
+        let footer = render_footer(app);
+
+        frame.render_widget(todo_list, content_chunks[0]);
+        frame.render_widget(notepad, content_chunks[1]);
+        frame.render_widget(footer, total_chunks[1])
     })?;
 
     Ok(())
@@ -66,4 +76,30 @@ fn styled_block(title: &'static str, is_active: bool) -> Block<'static> {
     } else {
         Block::default().title(title).borders(Borders::ALL)
     }
+}
+
+fn render_footer(app: &App) -> Paragraph<'static> {
+    let now = Local::now();
+    let datetime = now.format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let help_text = match app.active_window {
+        Window::TodoList => "Keys: [E] Edit  [I] Insert  [R] Remove  [Space] Toggle Check",
+        Window::Notepad => "Keys: [E] Edit Note  [Enter] New Line",
+    };
+
+    let footer_text = format!("{} | {}", help_text, datetime);
+
+    Paragraph::new(footer_text)
+        .style(
+            Style::default()
+                .fg(Color::White)
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .title("Info"),
+        )
 }

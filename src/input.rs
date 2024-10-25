@@ -42,6 +42,7 @@ fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn st
             _ => {}
         }
     } else {
+        // TODO - fix this,  come up with more intuitive key commands based on widget context
         if let KeyCode::Char('e') = key.code {
             app.notepad_editing = !app.notepad_editing;
         }
@@ -97,7 +98,6 @@ pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn s
 
             // Enter Edit mode
             KeyCode::Char('e') => {
-                info!("entering edit mode");
                 app.todo_editing = true;
                 app.current_input = app.items[app.selected].description.clone();
             }
