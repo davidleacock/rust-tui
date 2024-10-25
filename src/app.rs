@@ -4,8 +4,7 @@ pub struct TodoItem {
     pub checked: bool,
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Window {
     TodoList,
     Notepad,

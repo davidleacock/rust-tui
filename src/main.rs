@@ -17,7 +17,7 @@ use cli_log::*;
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    init_cli_log!(); 
+    // init_cli_log!(); 
     
     // Handle user input manually
     enable_raw_mode()?;
