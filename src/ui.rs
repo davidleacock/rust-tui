@@ -22,30 +22,40 @@ pub fn draw_ui<B: ratatui::backend::Backend>(
             .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
             .split(total_chunks[0]);
 
-        let todo_items: Vec<ListItem> = app
-            .items
-            .iter()
-            .enumerate()
-            .map(|(i, item)| {
-                let status = if item.checked { "✅" } else { "⭕️" };
+        let todo_items: Vec<ListItem> = if app.todo_items.is_empty() {
+            vec![
+                ListItem::new("No current tasks. Press `I` to insert.").style(
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::ITALIC),
+                ),
+            ]
+        } else {
+            app.todo_items
+                .iter()
+                .enumerate()
+                .map(|(i, item)| {
+                    let status = if item.checked { "✅" } else { "⭕️" };
 
-                if i == app.selected && app.todo_editing {
-                    ListItem::new(format!("{} - {}", status, app.current_input.clone())).style(
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD),
-                    )
-                } else if i == app.selected {
-                    ListItem::new(format!("{} - {}", status, item.description)).style(
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD),
-                    )
-                } else {
-                    ListItem::new(format!("{} - {}", status, item.description))
-                }
-            })
-            .collect();
+                    if i == app.current_todo_item && app.todo_editing_mode {
+                        ListItem::new(format!("{} - {}", status, app.current_todo_input.clone()))
+                            .style(
+                                Style::default()
+                                    .fg(Color::Yellow)
+                                    .add_modifier(Modifier::BOLD),
+                            )
+                    } else if i == app.current_todo_item {
+                        ListItem::new(format!("{} - {}", status, item.description)).style(
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                    } else {
+                        ListItem::new(format!("{} - {}", status, item.description))
+                    }
+                })
+                .collect()
+        };
 
         let todo_list = List::new(todo_items)
             .block(styled_block("Todo", app.active_window == Window::TodoList));
