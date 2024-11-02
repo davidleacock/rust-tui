@@ -10,27 +10,30 @@ pub enum Window {
     Notepad,
 }
 
+
+// TODO: Maybe a global editing mode?  
+
 #[derive(Debug)]
 pub struct App {
-    pub items: Vec<TodoItem>,
-    pub selected: usize,
-    pub todo_editing: bool,
-    pub current_input: String,
+    pub todo_items: Vec<TodoItem>,
+    pub current_todo_item: usize,
+    pub todo_editing_mode: bool,
+    pub current_todo_input: String,
     pub active_window: Window,
     pub notepad_content: String,
-    pub notepad_editing: bool,
+    pub notepad_editing_mode: bool,
 }
 
 impl App {
     pub fn new() -> Self {
         App {
-            items: vec![],
-            selected: 0,
-            todo_editing: false,
-            current_input: String::new(),
+            todo_items: vec![],
+            current_todo_item: 0,
+            todo_editing_mode: false,
+            current_todo_input: String::new(),
             active_window: Window::Notepad,
             notepad_content: String::new(),
-            notepad_editing: true,
+            notepad_editing_mode: true,
         }
     }
 }
