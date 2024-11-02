@@ -27,7 +27,7 @@ pub fn handle_inputs(app: &mut App) -> Result<bool, Box<dyn std::error::Error>> 
 }
 
 fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
-    if app.notepad_editing {
+    if app.notepad_editing_mode {
         match key.code {
             KeyCode::Char(c) => {
                 app.notepad_content.push(c);
@@ -44,7 +44,7 @@ fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn st
     } else {
         // TODO - fix this,  come up with more intuitive key commands based on widget context
         if let KeyCode::Char('e') = key.code {
-            app.notepad_editing = !app.notepad_editing;
+            app.notepad_editing_mode = !app.notepad_editing_mode;
         }
     }
 
@@ -52,17 +52,17 @@ fn handle_notepad_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn st
 }
 
 pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
-    if app.todo_editing {
+    if app.todo_editing_mode {
         match key.code {
             KeyCode::Char(c) => {
-                app.current_input.push(c);
+                app.current_todo_input.push(c);
             }
             KeyCode::Backspace => {
-                app.current_input.pop();
+                app.current_todo_input.pop();
             }
             KeyCode::Enter => {
-                app.items[app.selected].description = app.current_input.clone();
-                app.todo_editing = false;
+                app.todo_items[app.current_todo_item].description = app.current_todo_input.clone();
+                app.todo_editing_mode = false;
             }
             _ => {}
         }
@@ -70,36 +70,36 @@ pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn s
         match key.code {
             // TodoItem selection
             KeyCode::Up => {
-                if app.selected > 0 {
-                    app.selected -= 1;
+                if app.current_todo_item > 0 {
+                    app.current_todo_item -= 1;
                 }
             }
             KeyCode::Down => {
-                if app.selected < app.items.len() - 1 {
-                    app.selected += 1;
+                if app.current_todo_item < app.todo_items.len() - 1 {
+                    app.current_todo_item += 1;
                 }
             }
             KeyCode::Left => {
-                if app.selected > 0 {
-                    app.selected -= 1;
+                if app.current_todo_item > 0 {
+                    app.current_todo_item -= 1;
                 }
             }
             KeyCode::Right => {
-                if app.selected < app.items.len() - 1 {
-                    app.selected += 1;
+                if app.current_todo_item < app.todo_items.len() - 1 {
+                    app.current_todo_item += 1;
                 }
             }
 
             // Blank enter to select
             KeyCode::Char(' ') => {
-                let item = &mut app.items[app.selected];
+                let item = &mut app.todo_items[app.current_todo_item];
                 item.checked = !item.checked;
             }
 
             // Enter Edit mode
             KeyCode::Char('e') => {
-                app.todo_editing = true;
-                app.current_input = app.items[app.selected].description.clone();
+                app.todo_editing_mode = true;
+                app.current_todo_input = app.todo_items[app.current_todo_item].description.clone();
             }
 
             // Insert new task
@@ -108,27 +108,27 @@ pub fn handle_todo_input(app: &mut App, key: KeyEvent) -> Result<bool, Box<dyn s
                     description: String::from(""),
                     checked: false,
                 };
-                if app.items.len() == 0 {
-                    app.items.insert(0, new_item);
-                    app.selected = 0;
+                if app.todo_items.len() == 0 {
+                    app.todo_items.insert(0, new_item);
+                    app.current_todo_item = 0;
                 } else {
-                    app.items.insert(app.selected + 1, new_item);
-                    app.selected += 1;
+                    app.todo_items.insert(app.current_todo_item + 1, new_item);
+                    app.current_todo_item += 1;
                 }
-                app.todo_editing = true;
-                app.current_input = String::new();
+                app.todo_editing_mode = true;
+                app.current_todo_input = String::new();
             }
 
             // Delete task
             KeyCode::Char('d') => {
-                if app.items.len() > 1 {
-                    app.items.remove(app.selected);
-                    if app.selected >= app.items.len() {
-                        app.selected = app.items.len() - 1;
+                if app.todo_items.len() > 1 {
+                    app.todo_items.remove(app.current_todo_item);
+                    if app.current_todo_item >= app.todo_items.len() {
+                        app.current_todo_item = app.todo_items.len() - 1;
                     }
-                } else if app.items.len() == 1 {
-                    app.items.remove(app.selected);
-                    app.selected = 0;
+                } else if app.todo_items.len() == 1 {
+                    app.todo_items.remove(app.current_todo_item);
+                    app.current_todo_item = 0;
                 }
             }
 
